@@ -83,7 +83,7 @@ end
 
 
 # Backup file to be played when no audio is coming from the studio
-noodband = single("/etc/liquidsoap/noodband.wav")
+emergency = single("/etc/liquidsoap/emergency.wav")
 
 # Input for primary studio stream
 studio_a =
@@ -153,7 +153,7 @@ studio_b = buffer(id="buffered_studio_b", fallible=true, studio_b)
 # Combine live inputs and fallback
 radio =
   fallback(
-    id="radio_prod", track_sensitive=false, [studio_a, studio_b, noodband]
+    id="radio_prod", track_sensitive=false, [studio_a, studio_b, emergency]
   )
 
 # Process the radio stream
@@ -197,16 +197,16 @@ output_icecast_stream(
 EOF
 }
 
-download_noodband() {
-    echo "Downloading noodband.wav from FTP server..."
-    if curl --ftp-pasv -u "$NOODBAND_USER:$NOODBAND_PASS" -o /etc/liquidsoap/noodband.wav "$NOODBAND_URL"; then
+download_emergency() {
+    echo "Downloading emergency.wav from FTP server..."
+    if curl --ftp-pasv -u "$EMERGENCY_USER:$EMERGENCY_PASS" -o /etc/liquidsoap/emergency.wav "$emergency_URL"; then
         # Check if the downloaded file is a valid audio file (more than 100 bytes)
-        if [ -f /etc/liquidsoap/noodband.wav ] && [ $(stat -c%s /etc/liquidsoap/noodband.wav) -gt 100 ]; then
-            echo "Noodband file downloaded successfully"
+        if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 100 ]; then
+            echo "emergency file downloaded successfully"
             return 0
         else
             echo "Downloaded file is too small or invalid"
-            rm -f /etc/liquidsoap/noodband.wav
+            rm -f /etc/liquidsoap/emergency.wav
             return 1
         fi
     else
@@ -217,23 +217,23 @@ download_noodband() {
 
 # Function to create a silence fallback file
 create_silence_fallback() {
-    echo "Creating 10-second silence file as noodband.wav..."
-    ffmpeg -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -t 10 -acodec pcm_s16le /etc/liquidsoap/noodband.wav -y 2>/dev/null || {
-        echo "Error: Could not create noodband.wav with ffmpeg, trying alternative method..."
+    echo "Creating 120-second silence file as emergency.wav..."
+    ffmpeg -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -t 120 -acodec pcm_s16le /etc/liquidsoap/emergency.wav -y 2>/dev/null || {
+        echo "Error: Could not create emergency.wav with ffmpeg, trying alternative method..."
         # Alternative method using sox if available, or create a minimal valid WAV
         if command -v sox >/dev/null 2>&1; then
-            sox -n -r 48000 -c 2 /etc/liquidsoap/noodband.wav trim 0.0 10.0
+            sox -n -r 48000 -c 2 /etc/liquidsoap/emergency.wav trim 0.0 120.0
         else
-            echo "Error: Could not create noodband.wav fallback"
+            echo "Error: Could not create emergency.wav fallback"
             exit 1
         fi
     }
     
     # Verify the created file
-    if [ -f /etc/liquidsoap/noodband.wav ] && [ $(stat -c%s /etc/liquidsoap/noodband.wav) -gt 1000 ]; then
+    if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 1000 ]; then
         echo "Silence fallback created successfully"
     else
-        echo "Error: Failed to create valid noodband.wav file"
+        echo "Error: Failed to create valid emergency.wav file"
         exit 1
     fi
 }
@@ -244,14 +244,25 @@ echo "Using SOURCE_PASSWORD: $SOURCE_PASSWORD"
 echo "Using ICECAST_SOURCE_PASSWORD: $ICECAST_SOURCE_PASSWORD"
 edit_liquidsoap_config
 
-# Download noodband file if FTP credentials are provided
-if [ -n "$NOODBAND_URL" ] && [ -n "$NOODBAND_USER" ] && [ -n "$NOODBAND_PASS" ]; then
-    if ! download_noodband; then
-        echo "Warning: Noodband download failed, creating silence fallback..."
+# Download emergency file if EMERGENCY_URL is provided (HTTPS)
+if [ -n "$EMERGENCY_URL" ]; then
+    echo "Downloading emergency.wav from $EMERGENCY_URL..."
+    if curl -fsSL -o /etc/liquidsoap/emergency.wav "$EMERGENCY_URL"; then
+        # Check if the downloaded file is a valid audio file (more than 100 bytes)
+        if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 100 ]; then
+            echo "emergency file downloaded successfully"
+        else
+            echo "Downloaded file is too small or invalid"
+            rm -f /etc/liquidsoap/emergency.wav
+            echo "Creating silence fallback..."
+            create_silence_fallback
+        fi
+    else
+        echo "HTTPS download failed, creating silence fallback..."
         create_silence_fallback
     fi
 else
-    echo "No noodband FTP configuration provided, creating silence fallback..."
+    echo "No emergency URL provided, creating silence fallback..."
     create_silence_fallback
 fi
 
