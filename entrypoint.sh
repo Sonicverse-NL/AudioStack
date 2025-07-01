@@ -90,6 +90,7 @@ studio_a =
   input.harbor(
     "/",
     port=8001,
+    user="source",
     password="$INPUT_1_PASSWORD"
   )
 
@@ -98,6 +99,7 @@ studio_b =
   input.harbor(
     "/",
     port=8002,
+    user="source",
     password="$INPUT_2_PASSWORD"
   )
 
