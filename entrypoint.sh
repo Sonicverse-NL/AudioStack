@@ -185,14 +185,14 @@ end
 # Output a high bitrate mp3 stream
 output_icecast_stream(
   format=%mp3(bitrate = 192, samplerate = 48000, internal_quality = 0),
-  mount="/radio.mp3",
+  mount="/radio",
   source=audio_to_icecast
 )
 
 # Output a low bitrate stream (fallback to MP3 if AAC not available)
 output_icecast_stream(
   format=%mp3(bitrate = 96, samplerate = 48000),
-  mount="/radio-lq.mp3",
+  mount="/radio-lq",
   source=audio_to_icecast
 )
 EOF
@@ -245,8 +245,8 @@ echo "Using SOURCE_PASSWORD: $SOURCE_PASSWORD"
 echo "Using ICECAST_SOURCE_PASSWORD: $ICECAST_SOURCE_PASSWORD"
 
 # Check for any existing processes on our ports
-echo "Checking for existing processes on ports 8001 and 8002..."
-netstat -tuln | grep -E ':(8001|8002)' || echo "Ports 8001 and 8002 appear to be free"
+echo "Checking for existing processes on ports 8001 and 8003..."
+netstat -tuln | grep -E ':(8001|8003)' || echo "Ports 8001 and 8003 appear to be free"
 
 # Kill any existing liquidsoap or icecast processes
 pkill -f liquidsoap || true

@@ -53,7 +53,7 @@ services:
     ports:
       - "8000:8000"  # Icecast web interface and streams
       - "8001:8001"  # Primary studio input
-      - "8002:8002"  # Backup studio input
+      - "8003:8003"  # Backup studio input
     environment:
       # Station Information
       - STATION_NAME=My Radio Station
