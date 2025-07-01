@@ -90,7 +90,7 @@ studio_a =
   input.harbor(
     "/",
     port=8001,
-    password="${INPUT_1_PASSWORD}"
+    password="$INPUT_1_PASSWORD"
   )
 
 # Input for backup studio stream
@@ -98,7 +98,7 @@ studio_b =
   input.harbor(
     "/",
     port=8002,
-    password="${INPUT_2_PASSWORD}"
+    password="$INPUT_2_PASSWORD"
   )
 
 # Log silence detection and resumption
