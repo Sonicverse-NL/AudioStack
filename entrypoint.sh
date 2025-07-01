@@ -90,7 +90,8 @@ studio_a =
     "/studio_a",
     port=8001,
     password="$INPUT_1_PASSWORD",
-    icy=true
+    icy=true,
+    bind_addr="0.0.0.0"
   )
 
 # Input for backup studio stream
@@ -99,7 +100,8 @@ studio_b =
     "/studio_b",
     port=8002,
     password="$INPUT_2_PASSWORD",
-    icy=true
+    icy=true,
+    bind_addr="0.0.0.0"
   )
 
 # Log silence detection and resumption
@@ -243,6 +245,16 @@ create_silence_fallback() {
 echo "Generating Liquidsoap configuration..."
 echo "Using SOURCE_PASSWORD: $SOURCE_PASSWORD"
 echo "Using ICECAST_SOURCE_PASSWORD: $ICECAST_SOURCE_PASSWORD"
+
+# Check for any existing processes on our ports
+echo "Checking for existing processes on ports 8001 and 8002..."
+netstat -tuln | grep -E ':(8001|8002)' || echo "Ports 8001 and 8002 appear to be free"
+
+# Kill any existing liquidsoap or icecast processes
+pkill -f liquidsoap || true
+pkill -f icecast2 || true
+sleep 2
+
 edit_liquidsoap_config
 
 # Download emergency file if EMERGENCY_URL is provided (HTTPS)

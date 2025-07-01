@@ -9,6 +9,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     liquidsoap \
     ffmpeg \
     curl \
+    net-tools \
     mime-support && \
     rm -rf /var/cache/apt/*
 
