@@ -1,0 +1,29 @@
+{
+  "name": "audiostack",
+  "version": "1.0.0",
+  "description": "Docker-based audio streaming solution with Icecast2 and Liquidsoap",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install",
+    "commitlint": "commitlint --edit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "husky": "^8.0.3"
+  },
+  "keywords": [
+    "audio",
+    "streaming",
+    "icecast",
+    "liquidsoap",
+    "docker",
+    "radio"
+  ],
+  "author": "Sonicverse <info@sonicverse.nl>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sonicverse-NL/AudioStack.git"
+  }
+}
