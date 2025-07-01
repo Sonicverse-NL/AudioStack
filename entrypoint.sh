@@ -80,6 +80,8 @@ def log_event(input_name, event) =
   )
 end
 
+bind_addr = "0.0.0.0"
+
 
 # Backup file to be played when no audio is coming from the studio
 emergency = single("/etc/liquidsoap/emergency.wav")
