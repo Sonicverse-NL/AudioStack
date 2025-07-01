@@ -235,61 +235,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contributing
 
-We welcome contributions to AudioStack! Please follow these guidelines:
+We welcome contributions to AudioStack! Please follow the [contributing guidelines](CONTRIBUTING.MD).
 
-### Development Setup
-
-1. Fork the repository
-2. Clone your fork locally
-3. Run the development setup script:
-   ```bash
-   ./scripts/setup-dev.sh
-   ```
-
-### Commit Message Convention
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/) to ensure consistent and readable commit history. All commits must follow this format:
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-#### Valid Types
-- **feat**: A new feature
-- **fix**: A bug fix  
-- **docs**: Documentation only changes
-- **style**: Changes that do not affect the meaning of the code
-- **refactor**: A code change that neither fixes a bug nor adds a feature
-- **perf**: A code change that improves performance
-- **test**: Adding missing tests or correcting existing tests
-- **build**: Changes that affect the build system or external dependencies
-- **ci**: Changes to CI configuration files and scripts
-- **chore**: Other changes that don't modify src or test files
-- **revert**: Reverts a previous commit
-
-#### Examples
-- `feat(auth): add OAuth2 login support`
-- `fix: resolve memory leak in audio processing`
-- `docs: update installation instructions`
-- `ci: add automated docker builds`
-
-#### Local Validation
-Commit messages are automatically validated locally using husky and commitlint. Invalid commits will be rejected before they're created.
-
-#### CI Validation
-All pull requests are checked for conventional commit compliance. PRs with non-compliant commit messages will fail CI checks.
-
-### Pull Request Process
-
-1. Create a feature branch from main
-2. Make your changes following conventional commits
-3. Ensure all tests pass and Docker builds successfully
-4. Push to your fork and create a Pull Request
-5. Ensure CI checks pass (including commit message validation)
 
 
 ## Support
