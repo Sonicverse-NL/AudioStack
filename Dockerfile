@@ -17,10 +17,12 @@ RUN adduser --system --group --no-create-home icecast && \
     mkdir -p /etc/liquidsoap /var/log/icecast2 /var/run/icecast2 && \
     chown -R icecast:icecast /var/log/icecast2 /var/run/icecast2 /etc/liquidsoap
 
-# Copy entrypoint script
-# and make it executable
+# Copy entrypoint script and icecast config
+# and make them executable
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY icecast.xml /etc/icecast2/icecast.xml
+RUN chmod +x /entrypoint.sh && \
+    chown icecast:icecast /etc/icecast2/icecast.xml
 
 EXPOSE 8000 \
        8001 \

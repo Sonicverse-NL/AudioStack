@@ -60,10 +60,9 @@ if [ -n "$ICECAST_MAX_SOURCES" ]; then
 fi
 
 # Set icecast to run as icecast user (security requirement)
-# Note: These tags might not exist in default config, but we'll try to add them
 if grep -q "<changeowner>" /etc/icecast2/icecast.xml; then
-  edit_icecast_config changeowner-user "icecast"
-  edit_icecast_config changeowner-group "icecast"
+  edit_icecast_config user "icecast"
+  edit_icecast_config group "icecast"
 else
   echo "Warning: changeowner tags not found in icecast.xml - will run as root"
 fi
