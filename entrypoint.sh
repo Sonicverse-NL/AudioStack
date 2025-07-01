@@ -88,7 +88,7 @@ emergency = single("/etc/liquidsoap/emergency.wav")
 # Input for primary studio stream
 studio_a =
   input.harbor(
-    "/",
+    "/studio_a",
     port=8001,
     password="$INPUT_1_PASSWORD",
     icy=true
@@ -97,7 +97,7 @@ studio_a =
 # Input for backup studio stream
 studio_b =
   input.harbor(
-    "/",
+    "/studio_b",
     port=8002,
     password="$INPUT_2_PASSWORD",
     icy=true
