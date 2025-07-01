@@ -150,11 +150,12 @@ ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
 
 ### From Liquidsoap
 ```liquidsoap
-output.icecast(
+# Stream to primary input using Shoutcast protocol
+output.harbor(
   %mp3,
-  host="your-server",
   port=8001,
   password="INPUT_1_PASSWORD",
+  icy=true,
   mount="/",
   your_source
 )
