@@ -133,7 +133,7 @@ Images are built for multiple architectures:
 1. Add an "Audio Output Capture" source
 2. Go to Settings → Stream
 3. Set Service to "Custom..."
-4. Set Server to: `http://your-server:8001/` (primary) or `http://your-server:8002/` (backup)
+4. Set Server to: `http://your-server:8001/studio_a` (primary) or `http://your-server:8002/studio_b` (backup)
 5. Set Stream Key to your input password
 6. **Important**: Use "Use authentication" and set password to your INPUT_PASSWORD (leave username empty)
 
@@ -141,11 +141,11 @@ Images are built for multiple architectures:
 ```bash
 # Stream to primary input (Shoutcast format)
 ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
-  http://source:INPUT_1_PASSWORD@your-server:8001/
+  http://source:INPUT_1_PASSWORD@your-server:8001/studio_a
 
 # Stream to backup input (Shoutcast format)
 ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
-  http://source:INPUT_2_PASSWORD@your-server:8002/
+  http://source:INPUT_2_PASSWORD@your-server:8002/studio_b
 ```
 
 ### From Liquidsoap
@@ -156,7 +156,7 @@ output.harbor(
   port=8001,
   password="INPUT_1_PASSWORD",
   icy=true,
-  mount="/",
+  mount="/studio_a",
   your_source
 )
 ```
