@@ -27,7 +27,7 @@ RUN chmod +x /entrypoint.sh && \
 
 EXPOSE 8000 \
        8001 \
-       8002
+       8003
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 CMD ["sh", "-c", "su -s /bin/sh icecast -c 'icecast2 -c /etc/icecast2/icecast.xml' & su -s /bin/sh icecast -c 'liquidsoap /etc/liquidsoap/config.liq'"]

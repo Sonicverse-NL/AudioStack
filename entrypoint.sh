@@ -93,11 +93,11 @@ studio_a =
     icy=true
   )
 
-# Input for backup studio stream
+# Input for backup studio stream  
 studio_b =
   input.harbor(
-    "/studio_b",
-    port=8002,
+    "/studio_b", 
+    port=8003,
     password="$INPUT_2_PASSWORD",
     icy=true
   )
