@@ -90,8 +90,8 @@ studio_a =
   input.harbor(
     "/",
     port=8001,
-    user="source",
-    password="$INPUT_1_PASSWORD"
+    password="$INPUT_1_PASSWORD",
+    icy=true
   )
 
 # Input for backup studio stream
@@ -99,8 +99,8 @@ studio_b =
   input.harbor(
     "/",
     port=8002,
-    user="source",
-    password="$INPUT_2_PASSWORD"
+    password="$INPUT_2_PASSWORD",
+    icy=true
   )
 
 # Log silence detection and resumption
@@ -201,7 +201,7 @@ EOF
 
 download_emergency() {
     echo "Downloading emergency.wav from FTP server..."
-    if curl --ftp-pasv -u "$EMERGENCY_USER:$EMERGENCY_PASS" -o /etc/liquidsoap/emergency.wav "$emergency_URL"; then
+    if curl --ftp-pasv -u "$EMERGENCY_USER:$EMERGENCY_PASS" -o /etc/liquidsoap/emergency.wav "$EMERGENCY_URL"; then
         # Check if the downloaded file is a valid audio file (more than 100 bytes)
         if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 100 ]; then
             echo "emergency file downloaded successfully"

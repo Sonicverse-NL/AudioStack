@@ -135,16 +135,17 @@ Images are built for multiple architectures:
 3. Set Service to "Custom..."
 4. Set Server to: `http://your-server:8001/` (primary) or `http://your-server:8002/` (backup)
 5. Set Stream Key to your input password
+6. **Important**: Use "Use authentication" and set password to your INPUT_PASSWORD (leave username empty)
 
 ### From FFmpeg
 ```bash
-# Stream to primary input
-ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 \
-  icecast://source:INPUT_1_PASSWORD@your-server:8001/
+# Stream to primary input (Shoutcast format)
+ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
+  http://source:INPUT_1_PASSWORD@your-server:8001/
 
-# Stream to backup input
-ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 \
-  icecast://source:INPUT_2_PASSWORD@your-server:8002/
+# Stream to backup input (Shoutcast format)
+ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
+  http://source:INPUT_2_PASSWORD@your-server:8002/
 ```
 
 ### From Liquidsoap
