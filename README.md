@@ -28,7 +28,7 @@ docker run -d \
   --name audiostack \
   -p 8000:8000 \
   -p 8001:8001 \
-  -p 8002:8002 \
+  -p 8003:8003 \
   -e STATION_NAME="My Radio Station" \
   -e STATION_DESCRIPTION="Your radio station description" \
   -e STATION_GENRE="Various" \
@@ -133,7 +133,7 @@ Images are built for multiple architectures:
 1. Add an "Audio Output Capture" source
 2. Go to Settings → Stream
 3. Set Service to "Custom..."
-4. Set Server to: `http://your-server:8001/studio_a` (primary) or `http://your-server:8002/studio_b` (backup)
+4. Set Server to: `http://your-server:8001/studio_a` (primary) or `http://your-server:8003/studio_b` (backup)
 5. Set Stream Key to your input password
 6. **Important**: Use "Use authentication" and set password to your INPUT_PASSWORD (leave username empty)
 
@@ -145,7 +145,7 @@ ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
 
 # Stream to backup input (Shoutcast format)
 ffmpeg -i input.wav -acodec mp3 -ab 128k -f mp3 -content_type audio/mpeg \
-  http://source:INPUT_2_PASSWORD@your-server:8002/studio_b
+  http://source:INPUT_2_PASSWORD@your-server:8003/studio_b
 ```
 
 ### From Liquidsoap
@@ -165,7 +165,7 @@ output.harbor(
 
 - **8000**: Icecast2 web interface and audio streams
 - **8001**: Primary studio audio input
-- **8002**: Backup studio audio input
+- **8003**: Backup studio audio input
 
 ## Audio Processing Features
 
