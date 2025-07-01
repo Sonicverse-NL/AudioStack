@@ -80,8 +80,6 @@ def log_event(input_name, event) =
   )
 end
 
-bind_addr = "0.0.0.0"
-
 
 # Backup file to be played when no audio is coming from the studio
 emergency = single("/etc/liquidsoap/emergency.wav")
@@ -92,8 +90,7 @@ studio_a =
     "/studio_a",
     port=8001,
     password="$INPUT_1_PASSWORD",
-    icy=true,
-    bind_addr="0.0.0.0"
+    icy=true
   )
 
 # Input for backup studio stream
@@ -102,8 +99,7 @@ studio_b =
     "/studio_b",
     port=8002,
     password="$INPUT_2_PASSWORD",
-    icy=true,
-    bind_addr="0.0.0.0"
+    icy=true
   )
 
 # Log silence detection and resumption
