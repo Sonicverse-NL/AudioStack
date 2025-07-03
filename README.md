@@ -119,7 +119,7 @@ Images are built for multiple architectures:
 
 #### Audio Input Configuration
 - `INPUT_1_PASSWORD`: Password for primary studio input (port 8001)
-- `INPUT_2_PASSWORD`: Password for backup studio input (port 8002)
+- `INPUT_2_PASSWORD`: Password for backup studio input (port 8003)
 - `SOURCE_PASSWORD`: Stream source password (uses ICECAST_SOURCE_PASSWORD if not set)
 
 #### Fallback Audio Configuration
