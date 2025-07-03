@@ -10,6 +10,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     ffmpeg \
     curl \
     net-tools \
+    python3 \
+    python3-distutils \
     mime-support && \
     rm -rf /var/cache/apt/*
 
@@ -24,6 +26,10 @@ COPY entrypoint.sh /entrypoint.sh
 COPY icecast.xml /etc/icecast2/icecast.xml
 RUN chmod +x /entrypoint.sh && \
     chown icecast:icecast /etc/icecast2/icecast.xml
+
+# Copy log import script
+COPY import_logs.py /usr/local/bin/import_logs.py
+RUN chmod +x /usr/local/bin/import_logs.py
 
 EXPOSE 8000 \
        8001 \

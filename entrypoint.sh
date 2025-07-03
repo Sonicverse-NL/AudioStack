@@ -255,7 +255,21 @@ sleep 2
 
 edit_liquidsoap_config
 
-# Download emergency file if EMERGENCY_URL is provided (HTTPS)
+  # Start log importer loop if MATOMO_URL is set
+  if [ -n "$MATOMO_URL" ]; then
+    echo "Starting log importer: running import_logs.py every 30 seconds"
+    (
+      while true; do
+        if [ -n "$MATOMO_TOKEN_AUTH" ]; then
+          /usr/local/bin/import_logs.py --url="$MATOMO_URL" --token-auth="$MATOMO_TOKEN_AUTH" /var/log/icecast2/access.log
+        else
+          /usr/local/bin/import_logs.py --url="$MATOMO_URL" /var/log/icecast2/access.log
+        fi
+        sleep 30
+      done
+    ) &
+  fi
+  # Download emergency file if EMERGENCY_URL is provided (HTTPS)
 if [ -n "$EMERGENCY_URL" ]; then
     echo "Downloading emergency.wav from $EMERGENCY_URL..."
     if curl -fsSL -o /etc/liquidsoap/emergency.wav "$EMERGENCY_URL"; then
@@ -277,4 +291,4 @@ else
     create_silence_fallback
 fi
 
-exec "$@"
+exec "$@""
