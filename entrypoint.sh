@@ -254,23 +254,6 @@ pkill -f icecast2 || true
 sleep 2
 
 edit_liquidsoap_config
-
-  # Start listener tracking loop if ICECAST_URL and MATOMO_URL are set
-  if [ -n "$ICECAST_URL" ] && [ -n "$MATOMO_URL" ]; then
-    echo "Starting listener tracker: running listener_tracker.py every 30 seconds"
-    (
-      while true; do
-        python3 /usr/local/bin/listener_tracker.py
-        sleep 30
-      done
-    ) &
-  fi
-
-  # Ensure listener_tracker.py is available in the container
-  if [ ! -f /usr/local/bin/listener_tracker.py ]; then
-    echo "Error: listener_tracker.py not found in /usr/local/bin. Please ensure it is included in the Docker image."
-    exit 1
-  fi
   # Download emergency file if EMERGENCY_URL is provided (HTTPS)
 if [ -n "$EMERGENCY_URL" ]; then
     echo "Downloading emergency.wav from $EMERGENCY_URL..."

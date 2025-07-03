@@ -10,8 +10,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     ffmpeg \
     curl \
     net-tools \
-    mime-support \
-    python3-pip && \
+    mime-support && \
     rm -rf /var/cache/apt/*
 
 # Create icecast user and necessary directories
@@ -26,13 +25,7 @@ COPY icecast.xml /etc/icecast2/icecast.xml
 RUN chmod +x /entrypoint.sh && \
     chown icecast:icecast /etc/icecast2/icecast.xml
 
-# Copy listener tracker Python script
-COPY listener_tracker.py /usr/local/bin/listener_tracker.py
-RUN chmod +x /usr/local/bin/listener_tracker.py
-
-# Install Python dependencies
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
+# Removed listener tracker functionality
 
 EXPOSE 8000 \
        8001 \
