@@ -11,8 +11,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     curl \
     net-tools \
     mime-support \
-    php-cli \
-    php-curl && \
+    python3-pip && \
     rm -rf /var/cache/apt/*
 
 # Create icecast user and necessary directories
@@ -27,9 +26,13 @@ COPY icecast.xml /etc/icecast2/icecast.xml
 RUN chmod +x /entrypoint.sh && \
     chown icecast:icecast /etc/icecast2/icecast.xml
 
-# Copy listener tracker script
-COPY listener_tracker.php /usr/local/bin/listener_tracker.php
-RUN chmod +x /usr/local/bin/listener_tracker.php
+# Copy listener tracker Python script
+COPY listener_tracker.py /usr/local/bin/listener_tracker.py
+RUN chmod +x /usr/local/bin/listener_tracker.py
+
+# Install Python dependencies
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 EXPOSE 8000 \
        8001 \
