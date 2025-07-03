@@ -295,4 +295,4 @@ else
     create_silence_fallback
 fi
 
-exec "$@""
+exec "$@"
