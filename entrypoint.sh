@@ -260,8 +260,12 @@ edit_liquidsoap_config
     echo "Starting log importer: running import_logs.py every 30 seconds"
     (
       while true; do
-        if [ -n "$MATOMO_TOKEN_AUTH" ]; then
+        if [ -n "$MATOMO_TOKEN_AUTH" ] && [ -n "$MATOMO_ID_SITE" ]; then
+          /usr/local/bin/import_logs.py --url="$MATOMO_URL" --token-auth="$MATOMO_TOKEN_AUTH" --idsite="$MATOMO_ID_SITE" /var/log/icecast2/access.log
+        elif [ -n "$MATOMO_TOKEN_AUTH" ]; then
           /usr/local/bin/import_logs.py --url="$MATOMO_URL" --token-auth="$MATOMO_TOKEN_AUTH" /var/log/icecast2/access.log
+        elif [ -n "$MATOMO_ID_SITE" ]; then
+          /usr/local/bin/import_logs.py --url="$MATOMO_URL" --idsite="$MATOMO_ID_SITE" /var/log/icecast2/access.log
         else
           /usr/local/bin/import_logs.py --url="$MATOMO_URL" /var/log/icecast2/access.log
         fi
