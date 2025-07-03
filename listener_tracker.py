@@ -19,7 +19,12 @@ def main():
             if listeners is not None and int(listeners.text) > 0:
                 print(f"[{time.strftime('%m-%j-%Y, %H:%M:%S')}]")
                 for listener in root.findall('.//listener'):
-                    ip = listener.find('IP').text
+                    # Check for X-Forwarded-For header in Icecast response
+                    forwarded_ip = listener.find('X-Forwarded-For')
+                    if forwarded_ip is not None and forwarded_ip.text:
+                        ip = forwarded_ip.text
+                    else:
+                        ip = listener.find('IP').text
                     ua = listener.find('UserAgent').text
 
                     matomo_url = (

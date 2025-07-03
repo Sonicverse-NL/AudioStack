@@ -24,10 +24,12 @@
 
     <listen-socket>
         <port>8000</port>
+        <bind-address>0.0.0.0</bind-address>
     </listen-socket>
 
     <http-headers>
         <header name="Access-Control-Allow-Origin" value="*" />
+        <header name="X-Forwarded-For" value="" />
     </http-headers>
 
     <fileserve>1</fileserve>
