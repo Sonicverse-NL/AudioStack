@@ -76,14 +76,19 @@ edit_liquidsoap_config() {
     echo "Generating Liquidsoap configuration..."
     cat <<EOF > "/etc/liquidsoap/config.liq"
 # Logging
-def log_event(input_name, event) = log("#{input_name} #{event}", level=3) end
+log.level.set(3)
+log.stdout.set(true)
+log.file.path.set("/var/log/icecast2/liquidsoap.log")
+
+# Set harbor bind address to listen on all interfaces
+settings.server.harbor.bind_addr.set("0.0.0.0")
 
 # Fallback emergency file
 emergency = single("/etc/liquidsoap/emergency.wav")
 
 # Harbor inputs for the two studio streams, defined lazily to prevent premature initialization
-studio_a = mksafe(input.harbor(id="studio_a", "/studio_a", port=${LIQUIDSOAP_HARBOR_PORT_1}, bind_addr="0.0.0.0", password="${INPUT_1_PASSWORD}", icy=true))
-studio_b = mksafe(input.harbor(id="studio_b", "/studio_b", port=${LIQUIDSOAP_HARBOR_PORT_2}, bind_addr="0.0.0.0", password="${INPUT_2_PASSWORD}", icy=true))
+studio_a = mksafe(input.harbor(port=${LIQUIDSOAP_HARBOR_PORT_1}, password="${INPUT_1_PASSWORD}", icy=true, "/studio_a"))
+studio_b = mksafe(input.harbor(port=${LIQUIDSOAP_HARBOR_PORT_2}, password="${INPUT_2_PASSWORD}", icy=true, "/studio_b"))
 
 # Fallback logic: studio_a -> studio_b -> emergency
 radio = fallback(id="radio_prod", track_sensitive=false, [studio_a, studio_b, emergency])
