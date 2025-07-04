@@ -153,9 +153,9 @@ kill_process_on_port "$ICECAST_PORT"
 kill_process_on_port "$LIQUIDSOAP_HARBOR_PORT_1"
 kill_process_on_port "$LIQUIDSOAP_HARBOR_PORT_2"
 
-# Start Icecast in the background
+# Start Icecast in the background as the icecast user
 echo "Starting Icecast..."
-icecast2 -c /etc/icecast2/icecast.xml >/var/log/icecast2/error.log 2>&1 &
+su -s /bin/sh -c "icecast2 -c /etc/icecast2/icecast.xml" icecast &
 
 # Wait for Icecast to start
 echo "Waiting for Icecast to be ready..."
