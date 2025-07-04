@@ -44,6 +44,14 @@ if [ -z "$ICECAST_SOURCE_PASSWORD" ]; then
 fi
 export ICECAST_SOURCE_PASSWORD
 
+# Generate random passwords for harbor inputs if not set
+if [ -z "$INPUT_1_PASSWORD" ]; then
+    INPUT_1_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
+fi
+if [ -z "$INPUT_2_PASSWORD" ]; then
+    INPUT_2_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
+fi
+
 # Configure Icecast
 echo "Configuring Icecast..."
 edit_icecast_config source-password "$ICECAST_SOURCE_PASSWORD"
