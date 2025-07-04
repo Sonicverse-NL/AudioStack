@@ -1,279 +1,178 @@
 #!/bin/sh
+set -e
+
+# Function to update a tag in the Icecast XML configuration
 xml_edit() {
-  local tag="$1"
-  local value="$2"
-  local file="$3"
+    local tag="$1"
+    local value="$2"
+    local file="$3"
 
-  # Check if the tag exists in the XML file
-  if ! grep -q "<${tag}>" "$file"; then
-    echo "Tag <${tag}> not found in $file" >&2
-    return 1
-  fi
-
-  # Update the value of the tag in the XML file
-  sed -i "s|<${tag}>.*</${tag}>|<${tag}>${value}</${tag}>|g" "$file"
+    if ! grep -q "<${tag}>" "$file"; then
+        echo "Warning: Tag <${tag}> not found in $file" >&2
+        return 1
+    fi
+    sed -i "s|<${tag}>.*</${tag}>|<${tag}>${value}</${tag}>|g" "$file"
 }
 
-
-# Dynamically update configuration from environment variables
+# Function to apply configuration to the main icecast.xml
 edit_icecast_config() {
-  xml_edit "$@" /etc/icecast2/icecast.xml
+    xml_edit "$@" "/etc/icecast2/icecast.xml"
 }
 
-# Generate a random password if ICECAST_SOURCE_PASSWORD is not set
+# Function to kill any process listening on a given port
+kill_process_on_port() {
+    local port="$1"
+    echo "Checking for processes on port ${port}..."
+    local pid=$(netstat -tulpn | grep ":${port} " | awk '{print $7}' | cut -d'/' -f1)
+    if [ -n "$pid" ]; then
+        echo "Process with PID $pid found on port ${port}. Killing it..."
+        kill -9 "$pid"
+        sleep 2 # Give it a moment to die
+    else
+        echo "Port ${port} is free."
+    fi
+}
+
+# Set default ports if not provided
+ICECAST_PORT=${ICECAST_PORT:-3000}
+LIQUIDSOAP_HARBOR_PORT_1=${LIQUIDSOAP_HARBOR_PORT_1:-8001}
+LIQUIDSOAP_HARBOR_PORT_2=${LIQUIDSOAP_HARBOR_PORT_2:-8002}
+
+# Generate a random source password if not set
 if [ -z "$ICECAST_SOURCE_PASSWORD" ]; then
     ICECAST_SOURCE_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
-    export ICECAST_SOURCE_PASSWORD
 fi
+export ICECAST_SOURCE_PASSWORD
 
-# Set SOURCE_PASSWORD for Liquidsoap if not already set
-SOURCE_PASSWORD="$ICECAST_SOURCE_PASSWORD"
-export SOURCE_PASSWORD
-
-
-
-
+# Configure Icecast
+echo "Configuring Icecast..."
 edit_icecast_config source-password "$ICECAST_SOURCE_PASSWORD"
 edit_icecast_config relay-password "$ICECAST_SOURCE_PASSWORD"
+edit_icecast_config admin-password "${ICECAST_ADMIN_PASSWORD:-hackme}"
+edit_icecast_config admin-user "${ICECAST_ADMIN_USERNAME:-admin}"
+edit_icecast_config admin "${ICECAST_ADMIN_EMAIL:-admin@localhost}"
+edit_icecast_config location "${ICECAST_LOCATION:-Earth}"
+edit_icecast_config hostname "${ICECAST_HOSTNAME:-localhost}"
+edit_icecast_config clients "${ICECAST_MAX_CLIENTS:-100}"
+edit_icecast_config sources "${ICECAST_MAX_SOURCES:-10}"
+edit_icecast_config port "$ICECAST_PORT"
 
-
-if [ -n "$ICECAST_ADMIN_PASSWORD" ]; then
-  edit_icecast_config admin-password "$ICECAST_ADMIN_PASSWORD"
-fi
-if [ -n "$ICECAST_ADMIN_USERNAME" ]; then
-  edit_icecast_config admin-user "$ICECAST_ADMIN_USERNAME"
-fi
-if [ -n "$ICECAST_ADMIN_EMAIL" ]; then
-  edit_icecast_config admin "$ICECAST_ADMIN_EMAIL"
-fi
-if [ -n "$ICECAST_LOCATION" ]; then
-  edit_icecast_config location "$ICECAST_LOCATION"
-fi
-if [ -n "$ICECAST_HOSTNAME" ]; then
-  edit_icecast_config hostname "$ICECAST_HOSTNAME"
-fi
-if [ -n "$ICECAST_MAX_CLIENTS" ]; then
-  edit_icecast_config clients "$ICECAST_MAX_CLIENTS"
-fi
-if [ -n "$ICECAST_MAX_SOURCES" ]; then
-  edit_icecast_config sources "$ICECAST_MAX_SOURCES"
-fi
-
-# Set icecast to run as icecast user (security requirement)
+# Set icecast to run as icecast user
 if grep -q "<changeowner>" /etc/icecast2/icecast.xml; then
-  edit_icecast_config user "icecast"
-  edit_icecast_config group "icecast"
-else
-  echo "Warning: changeowner tags not found in icecast.xml - will run as root"
+    edit_icecast_config user "icecast"
+    edit_icecast_config group "icecast"
 fi
 
-# Generates the Liquidsoap configuration file at /etc/liquidsoap/config.liq
-# using environment variables for stream passwords and metadata.
-# Call this function to update the Liquidsoap config before starting the service.
+# Function to generate the Liquidsoap configuration
 edit_liquidsoap_config() {
-  cat <<EOF > "/etc/liquidsoap/config.liq"
-# Logging function for various events
-def log_event(input_name, event) =
-  log(
-    "#{input_name} #{event}",
-    level=3
-  )
-end
+    echo "Generating Liquidsoap configuration..."
+    cat <<EOF > "/etc/liquidsoap/config.liq"
+# Logging
+def log_event(input_name, event) = log("#{input_name} #{event}", level=3) end
 
-
-# Backup file to be played when no audio is coming from the studio
+# Fallback emergency file
 emergency = single("/etc/liquidsoap/emergency.wav")
 
-# Input for primary studio stream
-studio_a =
-  input.harbor(
-    "/studio_a",
-    port=8001,
-    password="$INPUT_1_PASSWORD",
-    icy=true
-  )
+# Harbor inputs for the two studio streams
+studio_a = input.harbor("/studio_a", port=${LIQUIDSOAP_HARBOR_PORT_1}, password="${INPUT_1_PASSWORD}", icy=true)
+studio_b = input.harbor("/studio_b", port=${LIQUIDSOAP_HARBOR_PORT_2}, password="${INPUT_2_PASSWORD}", icy=true)
 
-# Input for backup studio stream  
-studio_b =
-  input.harbor(
-    "/studio_b", 
-    port=8002,
-    password="$INPUT_2_PASSWORD",
-    icy=true
-  )
+# Add silence detection to log events
+studio_a = blank.detect(id="detect_studio_a", max_blank=15., fun() -> log_event("studio_a", "silence detected"), on_noise=fun() -> log_event("studio_a", "audio resumed"), studio_a)
+studio_b = blank.detect(id="detect_studio_b", max_blank=15., fun() -> log_event("studio_b", "silence detected"), on_noise=fun() -> log_event("studio_b", "audio resumed"), studio_b)
 
-# Log silence detection and resumption
-studio_a =
-  blank.detect(
-    id="detect_studio_a",
-    max_blank=15.0,
-    min_noise=15.0,
-    fun () ->
-      log_event(
-        "studio_a",
-        "silence detected"
-      ),
-    on_noise=
-      fun () ->
-        log_event(
-          "studio_a",
-          "audio resumed"
-        ),
-    studio_a
-  )
+# Strip silence to make inputs unavailable during silence
+studio_a = blank.strip(id="stripped_studio_a", max_blank=15., studio_a)
+studio_b = blank.strip(id="stripped_studio_b", max_blank=15., studio_b)
 
-studio_b =
-  blank.detect(
-    id="detect_studio_b",
-    max_blank=15.0,
-    min_noise=15.0,
-    fun () ->
-      log_event(
-        "studio_b",
-        "silence detected"
-      ),
-    on_noise=
-      fun () ->
-        log_event(
-          "studio_b",
-          "audio resumed"
-        ),
-    studio_b
-  )
-
-# Consider inputs unavailable when silent
-studio_a =
-  blank.strip(id="stripped_studio_a", max_blank=15., min_noise=15., studio_a)
-studio_b =
-  blank.strip(id="stripped_studio_b", max_blank=15., min_noise=15., studio_b)
-
-# Wrap it in a buffer to prevent latency from connection/disconnection to impact downstream operators/output
+# Buffer inputs to prevent disconnections from affecting the stream
 studio_a = buffer(id="buffered_studio_a", fallible=true, studio_a)
 studio_b = buffer(id="buffered_studio_b", fallible=true, studio_b)
 
-# Combine live inputs and fallback
-radio =
-  fallback(
-    id="radio_prod", track_sensitive=false, [studio_a, studio_b, emergency]
-  )
+# Fallback logic: studio_a -> studio_b -> emergency
+radio = fallback(id="radio_prod", track_sensitive=false, [studio_a, studio_b, emergency])
 
-# Process the radio stream
-radioproc = radio
-
-# Create a clock for output to Icecast
-audio_to_icecast = mksafe(buffer(radioproc))
+# Create a clock for the output
+audio_to_icecast = mksafe(buffer(radio))
 clock.assign_new(id="icecast_clock", [audio_to_icecast])
 
-# Function to output an icecast stream with common parameters
+# Function to create an Icecast output stream
 def output_icecast_stream(~format, ~mount, ~source) =
   output.icecast(
     format,
     fallible=false,
     host="localhost",
-    port=3000,
-    password="${SOURCE_PASSWORD}",
-    name="${STATION_NAME}",
-    description="${STATION_DESCRIPTION}",
-    genre="${STATION_GENRE}",
-    url="${STATION_URL}",
+    port=${ICECAST_PORT},
+    password="${ICECAST_SOURCE_PASSWORD}",
+    name="${STATION_NAME:-AudioStack}",
+    description="${STATION_DESCRIPTION:-A robust audio streaming server}",
+    genre="${STATION_GENRE:-Various}",
+    url="${STATION_URL:-http://localhost}",
     public=true,
     mount=mount,
     source
   )
 end
 
-# Output a high bitrate mp3 stream
-output_icecast_stream(
-  format=%mp3(bitrate = 192, samplerate = 48000, internal_quality = 0),
-  mount="/radio",
-  source=audio_to_icecast
-)
-
-# Output a low bitrate stream (fallback to MP3 if AAC not available)
-output_icecast_stream(
-  format=%mp3(bitrate = 96, samplerate = 48000),
-  mount="/radio-lq",
-  source=audio_to_icecast
-)
+# High and low bitrate MP3 streams
+output_icecast_stream(format=%mp3(bitrate=192, samplerate=48000), mount="/radio", source=audio_to_icecast)
+output_icecast_stream(format=%mp3(bitrate=96, samplerate=48000), mount="/radio-lq", source=audio_to_icecast)
 EOF
 }
 
-download_emergency() {
-    echo "Downloading emergency.wav from FTP server..."
-    if curl --ftp-pasv -u "$EMERGENCY_USER:$EMERGENCY_PASS" -o /etc/liquidsoap/emergency.wav "$EMERGENCY_URL"; then
-        # Check if the downloaded file is a valid audio file (more than 100 bytes)
-        if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 100 ]; then
-            echo "emergency file downloaded successfully"
-            return 0
-        else
-            echo "Downloaded file is too small or invalid"
-            rm -f /etc/liquidsoap/emergency.wav
-            return 1
-        fi
-    else
-        echo "FTP download failed"
-        return 1
-    fi
-}
-
-# Function to create a silence fallback file
+# Function to create a silent emergency file
 create_silence_fallback() {
-    echo "Creating 120-second silence file as emergency.wav..."
-    ffmpeg -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -t 120 -acodec pcm_s16le /etc/liquidsoap/emergency.wav -y 2>/dev/null || {
-        echo "Error: Could not create emergency.wav with ffmpeg, trying alternative method..."
-        # Alternative method using sox if available, or create a minimal valid WAV
-        if command -v sox >/dev/null 2>&1; then
-            sox -n -r 48000 -c 2 /etc/liquidsoap/emergency.wav trim 0.0 120.0
-        else
-            echo "Error: Could not create emergency.wav fallback"
-            exit 1
-        fi
-    }
-    
-    # Verify the created file
-    if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 1000 ]; then
-        echo "Silence fallback created successfully"
+    echo "Creating 120-second silent WAV file as emergency fallback..."
+    ffmpeg -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -t 120 -acodec pcm_s16le /etc/liquidsoap/emergency.wav -y >/dev/null 2>&1
+    if [ $? -eq 0 ] && [ -s /etc/liquidsoap/emergency.wav ]; then
+        echo "Silence file created successfully."
     else
-        echo "Error: Failed to create valid emergency.wav file"
+        echo "Error: Failed to create silence file." >&2
         exit 1
     fi
 }
 
-# Generate Liquidsoap configuration
-echo "Generating Liquidsoap configuration..."
-echo "Using SOURCE_PASSWORD: $SOURCE_PASSWORD"
-echo "Using ICECAST_SOURCE_PASSWORD: $ICECAST_SOURCE_PASSWORD"
-
-# Check for any existing processes on our ports
-echo "Checking for existing processes on ports 8001 and 8002..."
-netstat -tuln | grep -E ':(8001|8002)' || echo "Ports 8001 and 8002 appear to be free"
-
-# Kill any existing liquidsoap or icecast processes
-pkill -f liquidsoap || true
-pkill -f icecast2 || true
-sleep 2
-
-edit_liquidsoap_config
-  # Download emergency file if EMERGENCY_URL is provided (HTTPS)
+# Prepare emergency file
 if [ -n "$EMERGENCY_URL" ]; then
-    echo "Downloading emergency.wav from $EMERGENCY_URL..."
-    if curl -fsSL -o /etc/liquidsoap/emergency.wav "$EMERGENCY_URL"; then
-        # Check if the downloaded file is a valid audio file (more than 100 bytes)
-        if [ -f /etc/liquidsoap/emergency.wav ] && [ $(stat -c%s /etc/liquidsoap/emergency.wav) -gt 100 ]; then
-            echo "emergency file downloaded successfully"
-        else
-            echo "Downloaded file is too small or invalid"
-            rm -f /etc/liquidsoap/emergency.wav
-            echo "Creating silence fallback..."
-            create_silence_fallback
-        fi
-    else
-        echo "HTTPS download failed, creating silence fallback..."
+    echo "Downloading emergency file from $EMERGENCY_URL..."
+    if ! curl -fsSL -o /etc/liquidsoap/emergency.wav "$EMERGENCY_URL" || [ ! -s /etc/liquidsoap/emergency.wav ]; then
+        echo "Warning: Download failed or file is empty. Creating silent fallback."
         create_silence_fallback
+    else
+        echo "Emergency file downloaded successfully."
     fi
 else
-    echo "No emergency URL provided, creating silence fallback..."
     create_silence_fallback
 fi
 
-exec "$@"
+# Generate Liquidsoap config
+edit_liquidsoap_config
+
+# Check and clear ports before starting services
+kill_process_on_port "$ICECAST_PORT"
+kill_process_on_port "$LIQUIDSOAP_HARBOR_PORT_1"
+kill_process_on_port "$LIQUIDSOAP_HARBOR_PORT_2"
+
+# Start Icecast in the background
+echo "Starting Icecast..."
+icecast2 -c /etc/icecast2/icecast.xml >/var/log/icecast2/error.log 2>&1 &
+
+# Wait for Icecast to start
+echo "Waiting for Icecast to be ready..."
+for i in $(seq 1 10); do
+    if netstat -tulpn | grep -q ":${ICECAST_PORT} "; then
+        echo "Icecast is up and running."
+        break
+    fi
+    echo "Waiting... ($i/10)"
+    sleep 1
+done
+
+if ! netstat -tulpn | grep -q ":${ICECAST_PORT} "; then
+    echo "Error: Icecast failed to start. Check /var/log/icecast2/error.log" >&2
+    exit 1
+fi
+
+# Start Liquidsoap in the foreground
+echo "Starting Liquidsoap..."
+liquidsoap /etc/liquidsoap/config.liq
