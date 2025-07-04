@@ -184,14 +184,14 @@ end
 
 # Output a high bitrate mp3 stream
 output_icecast_stream(
-  format=%mp3(bitrate = 192, samplerate = 43000, internal_quality = 0),
+  format=%mp3(bitrate = 192, samplerate = 48000, internal_quality = 0),
   mount="/radio",
   source=audio_to_icecast
 )
 
 # Output a low bitrate stream (fallback to MP3 if AAC not available)
 output_icecast_stream(
-  format=%mp3(bitrate = 96, samplerate = 43000),
+  format=%mp3(bitrate = 96, samplerate = 48000),
   mount="/radio-lq",
   source=audio_to_icecast
 )
@@ -223,7 +223,7 @@ create_silence_fallback() {
         echo "Error: Could not create emergency.wav with ffmpeg, trying alternative method..."
         # Alternative method using sox if available, or create a minimal valid WAV
         if command -v sox >/dev/null 2>&1; then
-            sox -n -r 43000 -c 2 /etc/liquidsoap/emergency.wav trim 0.0 120.0
+            sox -n -r 48000 -c 2 /etc/liquidsoap/emergency.wav trim 0.0 120.0
         else
             echo "Error: Could not create emergency.wav fallback"
             exit 1
