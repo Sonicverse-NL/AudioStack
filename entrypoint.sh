@@ -80,8 +80,7 @@ log.level.set(3)
 log.stdout.set(true)
 log.file.path.set("/var/log/icecast2/liquidsoap.log")
 
-# Set harbor bind address to listen on all interfaces
-settings.harbor.bind_addrs := ["0.0.0.0"]
+set("harbor.bind_addr","0.0.0.0")
 
 # Fallback emergency file
 emergency = single("/etc/liquidsoap/emergency.wav")
