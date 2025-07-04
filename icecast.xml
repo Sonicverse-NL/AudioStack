@@ -24,7 +24,6 @@
 
     <listen-socket>
         <port>3000</port>
-        <bind-address>0.0.0.0</bind-address>
     </listen-socket>
 
     <http-headers>
