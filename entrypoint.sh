@@ -173,6 +173,6 @@ if ! netstat -tulpn | grep -q ":${ICECAST_PORT} "; then
     exit 1
 fi
 
-# Start Liquidsoap in the foreground
+# Start Liquidsoap in the foreground as the icecast user
 echo "Starting Liquidsoap..."
-liquidsoap /etc/liquidsoap/config.liq
+su -s /bin/sh -c "liquidsoap /etc/liquidsoap/config.liq" icecast
