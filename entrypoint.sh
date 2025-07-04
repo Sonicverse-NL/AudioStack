@@ -82,20 +82,20 @@ def log_event(input_name, event) = log("#{input_name} #{event}", level=3) end
 emergency = single("/etc/liquidsoap/emergency.wav")
 
 # Harbor inputs for the two studio streams
-studio_a = input.harbor("/studio_a", port=${LIQUIDSOAP_HARBOR_PORT_1}, password="${INPUT_1_PASSWORD}", icy=true)
-studio_b = input.harbor("/studio_b", port=${LIQUIDSOAP_HARBOR_PORT_2}, password="${INPUT_2_PASSWORD}", icy=true)
+raw_studio_a = input.harbor("/studio_a", port=${LIQUIDSOAP_HARBOR_PORT_1}, password="${INPUT_1_PASSWORD}", icy=true)
+raw_studio_b = input.harbor("/studio_b", port=${LIQUIDSOAP_HARBOR_PORT_2}, password="${INPUT_2_PASSWORD}", icy=true)
 
 # Add silence detection to log events
-studio_a = blank.detect(id="detect_studio_a", max_blank=15., fun() -> log_event("studio_a", "silence detected"), on_noise=fun() -> log_event("studio_a", "audio resumed"), studio_a)
-studio_b = blank.detect(id="detect_studio_b", max_blank=15., fun() -> log_event("studio_b", "silence detected"), on_noise=fun() -> log_event("studio_b", "audio resumed"), studio_b)
+detected_studio_a = blank.detect(id="detect_studio_a", max_blank=15., fun() -> log_event("studio_a", "silence detected"), on_noise=fun() -> log_event("studio_a", "audio resumed"), raw_studio_a)
+detected_studio_b = blank.detect(id="detect_studio_b", max_blank=15., fun() -> log_event("studio_b", "silence detected"), on_noise=fun() -> log_event("studio_b", "audio resumed"), raw_studio_b)
 
 # Strip silence to make inputs unavailable during silence
-studio_a = blank.strip(id="stripped_studio_a", max_blank=15., studio_a)
-studio_b = blank.strip(id="stripped_studio_b", max_blank=15., studio_b)
+stripped_studio_a = blank.strip(id="stripped_studio_a", max_blank=15., detected_studio_a)
+stripped_studio_b = blank.strip(id="stripped_studio_b", max_blank=15., detected_studio_b)
 
 # Buffer inputs to prevent disconnections from affecting the stream
-studio_a = buffer(id="buffered_studio_a", fallible=true, studio_a)
-studio_b = buffer(id="buffered_studio_b", fallible=true, studio_b)
+studio_a = buffer(id="buffered_studio_a", fallible=true, stripped_studio_a)
+studio_b = buffer(id="buffered_studio_b", fallible=true, stripped_studio_b)
 
 # Fallback logic: studio_a -> studio_b -> emergency
 radio = fallback(id="radio_prod", track_sensitive=false, [studio_a, studio_b, emergency])
