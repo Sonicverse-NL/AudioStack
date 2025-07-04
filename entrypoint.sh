@@ -245,8 +245,8 @@ echo "Using SOURCE_PASSWORD: $SOURCE_PASSWORD"
 echo "Using ICECAST_SOURCE_PASSWORD: $ICECAST_SOURCE_PASSWORD"
 
 # Check for any existing processes on our ports
-echo "Checking for existing processes on ports 3001 and 3002..."
-netstat -tuln | grep -E ':(3001|3002)' || echo "Ports 3001 and 3002 appear to be free"
+echo "Checking for existing processes on ports 8001 and 8002..."
+netstat -tuln | grep -E ':(8001|8002)' || echo "Ports 8001 and 8002 appear to be free"
 
 # Kill any existing liquidsoap or icecast processes
 pkill -f liquidsoap || true
