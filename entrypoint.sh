@@ -22,15 +22,18 @@ edit_icecast_config() {
 # Function to kill any process listening on a given port
 kill_process_on_port() {
     local port="$1"
-    echo "Checking for processes on port ${port}..."
-    local pid=$(netstat -tulpn | grep ":${port} " | awk '{print $7}' | cut -d'/' -f1)
-    if [ -n "$pid" ]; then
-        echo "Process with PID $pid found on port ${port}. Killing it..."
-        kill -9 "$pid"
-        sleep 2 # Give it a moment to die
-    else
-        echo "Port ${port} is free."
-    fi
+    echo "Ensuring port ${port} is free..."
+    while true; do
+        local pid=$(netstat -tulpn | grep ":${port} " | awk '{print $7}' | cut -d'/' -f1 | head -n 1)
+        if [ -n "$pid" ]; then
+            echo "Process with PID $pid found on port ${port}. Killing it..."
+            kill -9 "$pid"
+            sleep 1 # Give it a moment to die
+        else
+            echo "Port ${port} is free."
+            break
+        fi
+    done
 }
 
 # Set default ports if not provided
