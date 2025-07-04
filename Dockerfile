@@ -27,9 +27,9 @@ RUN chmod +x /entrypoint.sh && \
 
 # Removed listener tracker functionality
 
-EXPOSE 8000 \
-       8001 \
-       8003
+EXPOSE 3000 \
+       3001 \
+       3002
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 CMD ["sh", "-c", "su -s /bin/sh icecast -c 'icecast2 -c /etc/icecast2/icecast.xml' & su -s /bin/sh icecast -c 'liquidsoap /etc/liquidsoap/config.liq'"]

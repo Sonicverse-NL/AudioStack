@@ -88,7 +88,7 @@ emergency = single("/etc/liquidsoap/emergency.wav")
 studio_a =
   input.harbor(
     "/studio_a",
-    port=8001,
+    port=3001,
     password="$INPUT_1_PASSWORD",
     icy=true
   )
@@ -97,7 +97,7 @@ studio_a =
 studio_b =
   input.harbor(
     "/studio_b", 
-    port=8003,
+    port=3002,
     password="$INPUT_2_PASSWORD",
     icy=true
   )
@@ -170,7 +170,7 @@ def output_icecast_stream(~format, ~mount, ~source) =
     format,
     fallible=false,
     host="localhost",
-    port=8000,
+    port=3000,
     password="${SOURCE_PASSWORD}",
     name="${STATION_NAME}",
     description="${STATION_DESCRIPTION}",
@@ -184,14 +184,14 @@ end
 
 # Output a high bitrate mp3 stream
 output_icecast_stream(
-  format=%mp3(bitrate = 192, samplerate = 48000, internal_quality = 0),
+  format=%mp3(bitrate = 192, samplerate = 43000, internal_quality = 0),
   mount="/radio",
   source=audio_to_icecast
 )
 
 # Output a low bitrate stream (fallback to MP3 if AAC not available)
 output_icecast_stream(
-  format=%mp3(bitrate = 96, samplerate = 48000),
+  format=%mp3(bitrate = 96, samplerate = 43000),
   mount="/radio-lq",
   source=audio_to_icecast
 )
@@ -223,7 +223,7 @@ create_silence_fallback() {
         echo "Error: Could not create emergency.wav with ffmpeg, trying alternative method..."
         # Alternative method using sox if available, or create a minimal valid WAV
         if command -v sox >/dev/null 2>&1; then
-            sox -n -r 48000 -c 2 /etc/liquidsoap/emergency.wav trim 0.0 120.0
+            sox -n -r 43000 -c 2 /etc/liquidsoap/emergency.wav trim 0.0 120.0
         else
             echo "Error: Could not create emergency.wav fallback"
             exit 1
@@ -245,8 +245,8 @@ echo "Using SOURCE_PASSWORD: $SOURCE_PASSWORD"
 echo "Using ICECAST_SOURCE_PASSWORD: $ICECAST_SOURCE_PASSWORD"
 
 # Check for any existing processes on our ports
-echo "Checking for existing processes on ports 8001 and 8003..."
-netstat -tuln | grep -E ':(8001|8003)' || echo "Ports 8001 and 8003 appear to be free"
+echo "Checking for existing processes on ports 3001 and 3002..."
+netstat -tuln | grep -E ':(3001|3002)' || echo "Ports 3001 and 3002 appear to be free"
 
 # Kill any existing liquidsoap or icecast processes
 pkill -f liquidsoap || true

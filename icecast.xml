@@ -23,7 +23,7 @@
     <hostname>localhost</hostname>
 
     <listen-socket>
-        <port>8000</port>
+        <port>3000</port>
         <bind-address>0.0.0.0</bind-address>
     </listen-socket>
 
